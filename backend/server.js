@@ -19,6 +19,7 @@ app.use("/api/health", healthRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/predict", predictionRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+
 // MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI)
@@ -40,6 +41,6 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`MaternalTwin Backend running on port ${PORT}`);
 });

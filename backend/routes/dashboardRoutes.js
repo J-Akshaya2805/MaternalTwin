@@ -4,12 +4,18 @@ const HealthRecord = require("../models/HealthRecord");
 
 const router = express.Router();
 
-// Get complete dashboard data
+// ==========================================
+// GET COMPLETE DASHBOARD DATA
+// ==========================================
+
 router.get("/:patientId", async (req, res) => {
   try {
     const patientId = req.params.patientId;
 
-    const patient = await Patient.findOne({ patientId });
+    // Find patient
+    const patient = await Patient.findOne({
+      patientId,
+    });
 
     if (!patient) {
       return res.status(404).json({
@@ -17,9 +23,12 @@ router.get("/:patientId", async (req, res) => {
       });
     }
 
+    // Get latest health record
     const latestHealth = await HealthRecord.findOne({
       patientId,
-    }).sort({ createdAt: -1 });
+    }).sort({
+      createdAt: -1,
+    });
 
     if (!latestHealth) {
       return res.status(404).json({
@@ -27,16 +36,20 @@ router.get("/:patientId", async (req, res) => {
       });
     }
 
+    // Return dashboard data
     res.json({
       message: "Dashboard data retrieved successfully",
-      patient: patient,
+
+      patient,
+
       health: latestHealth,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Dashboard error:", error);
 
     res.status(500).json({
       message: "Failed to retrieve dashboard data",
+
       error: error.message,
     });
   }

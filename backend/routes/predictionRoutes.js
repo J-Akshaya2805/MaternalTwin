@@ -4,12 +4,20 @@ const HealthRecord = require("../models/HealthRecord");
 
 const router = express.Router();
 
-// Predict maternal and baby health
+// ==========================================
+// PREDICT + SAVE HEALTH RECORD
+// ==========================================
 router.post("/", async (req, res) => {
   try {
     const healthData = req.body;
 
-    // 1. Send data to ML service
+    console.log("Received health data:");
+    console.log(healthData);
+
+    // ------------------------------------------
+    // 1. Prepare data for ML model
+    // ------------------------------------------
+
     const mlData = {
       age: healthData.motherAge,
       systolic_bp: healthData.bloodPressure?.systolic,
@@ -25,7 +33,10 @@ router.post("/", async (req, res) => {
     console.log("Sending data to ML service:");
     console.log(mlData);
 
+    // ------------------------------------------
     // 2. Call Python ML API
+    // ------------------------------------------
+
     const mlResponse = await axios.post(
       "https://overspend-founder-driving.ngrok-free.dev/predict",
       mlData,
@@ -36,7 +47,10 @@ router.post("/", async (req, res) => {
     console.log("ML response:");
     console.log(prediction);
 
-    // 3. Save health data + prediction as a new record
+    // ------------------------------------------
+    // 3. Save ONE health record
+    // ------------------------------------------
+
     const healthRecord = new HealthRecord({
       patientId: healthData.patientId,
 
@@ -50,12 +64,16 @@ router.post("/", async (req, res) => {
       },
 
       motherHeartRate: healthData.motherHeartRate,
+
       temperature: healthData.temperature,
+
       bloodGlucose: healthData.bloodGlucose,
+
       hemoglobin: healthData.hemoglobin,
 
       // Baby
       babyHeartRate: healthData.babyHeartRate,
+
       babyMovement: healthData.babyMovement,
 
       // Pregnancy
@@ -63,25 +81,39 @@ router.post("/", async (req, res) => {
 
       // AI Prediction
       maternalRisk: prediction.maternal_risk,
+
       babyStatus: prediction.baby_status,
-      babyAlerts: prediction.baby_alerts,
+
+      babyAlerts: prediction.baby_alerts || [],
     });
 
     const savedRecord = await healthRecord.save();
 
-    // 4. Send result to frontend
-    res.json({
-      message: "Prediction generated and health record saved successfully",
+    console.log("Health record saved:", savedRecord._id);
 
-      prediction: prediction,
+    // ------------------------------------------
+    // 4. Return result to frontend
+    // ------------------------------------------
+
+    res.status(201).json({
+      message: "Health data submitted successfully",
+
+      prediction: {
+        maternal_risk: prediction.maternal_risk || "Unknown",
+
+        baby_status: prediction.baby_status || "Unknown",
+
+        baby_alerts: prediction.baby_alerts || [],
+      },
 
       recordId: savedRecord._id,
     });
   } catch (error) {
-    console.error("Prediction error:", error.message);
+    console.error("Prediction error:", error.response?.data || error.message);
 
     res.status(500).json({
       message: "Prediction failed",
+
       error: error.response?.data || error.message,
     });
   }
