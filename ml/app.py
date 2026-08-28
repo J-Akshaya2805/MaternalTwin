@@ -82,7 +82,23 @@ def predict_health(data: HealthData):
     )
 
     # ----------------------------------------
-    # Combined response
+    # Overall twin status
+    # ----------------------------------------
+
+    if baby_result["status"] == "Critical":
+        overall_status = "Critical"
+
+    elif baby_result["status"] == "Attention":
+        overall_status = "Attention"
+
+    elif maternal_risk == "high risk":
+        overall_status = "Attention"
+
+    else:
+        overall_status = "Normal"
+
+    # ----------------------------------------
+    # Return combined result
     # ----------------------------------------
 
     return {
@@ -91,6 +107,8 @@ def predict_health(data: HealthData):
         "baby_status": baby_result["status"],
 
         "baby_alerts": baby_result["alerts"],
+
+        "overall_status": overall_status,
 
         "measurements": {
             "maternal": {
@@ -109,3 +127,4 @@ def predict_health(data: HealthData):
             }
         }
     }
+
