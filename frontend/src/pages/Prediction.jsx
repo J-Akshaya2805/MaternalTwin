@@ -1,134 +1,214 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RiskScore from "../components/RiskScore";
+import { getDashboardData } from "../services/api";
 
 function Prediction() {
-  const [sleep, setSleep] = useState(5);
-  const [activity, setActivity] = useState(20);
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const calculatedRisk = Math.round(
-    Math.max(
-      12,
-      Math.min(
-        75,
-        45 -
-          (sleep - 5) * 4 -
-          (activity - 20) * 0.2
-      )
-    )
-  );
+  useEffect(() => {
+    getDashboardData()
+      .then((data) => {
+        setDashboard(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Prediction page error:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="page">
+        <h2>Loading prediction...</h2>
+      </div>
+    );
+  }
+
+  if (!dashboard) {
+    return (
+      <div className="page">
+        <h2>Unable to load prediction data</h2>
+      </div>
+    );
+  }
+
+  const health = dashboard.health;
+
+  // Convert ML risk category to a display score
+  let riskScore = 20;
+
+  if (health.maternalRisk === "mid risk") {
+    riskScore = 50;
+  } else if (health.maternalRisk === "high risk") {
+    riskScore = 80;
+  }
 
   return (
     <div className="page">
+
       <section className="page-heading">
         <div>
           <p className="page-label">
-            COUNTERFACTUAL SIMULATION
+            AI RISK PREDICTION
           </p>
 
-          <h2>What-If Prediction</h2>
+          <h2>Maternal Health Prediction</h2>
 
           <p>
-            Modify health factors to simulate possible
-            future maternal health trajectories.
+            AI-based assessment of the current
+            maternal and fetal health condition.
           </p>
         </div>
       </section>
+
 
       <section className="prediction-grid">
+
         <div className="simulation-card">
-          <h3>Create Simulation Scenario</h3>
+
+          <h3>Current Health Data</h3>
 
           <p>
-            Adjust the parameters to observe how the
-            predicted risk may change.
+            The prediction is based on the latest
+            health information recorded for the patient.
           </p>
 
-          <div className="slider-section">
-            <div className="slider-title">
-              <span>Average Sleep</span>
-              <strong>{sleep} hours/day</strong>
-            </div>
-
-            <input
-              type="range"
-              min="4"
-              max="10"
-              value={sleep}
-              onChange={(e) =>
-                setSleep(Number(e.target.value))
-              }
-            />
-          </div>
 
           <div className="slider-section">
             <div className="slider-title">
-              <span>Daily Activity</span>
-              <strong>{activity} min/day</strong>
+              <span>Mother Heart Rate</span>
+              <strong>
+                {health.motherHeartRate} bpm
+              </strong>
             </div>
-
-            <input
-              type="range"
-              min="0"
-              max="60"
-              step="5"
-              value={activity}
-              onChange={(e) =>
-                setActivity(Number(e.target.value))
-              }
-            />
           </div>
+
+
+          <div className="slider-section">
+            <div className="slider-title">
+              <span>Blood Pressure</span>
+              <strong>
+                {health.bloodPressure.systolic}/
+                {health.bloodPressure.diastolic}
+              </strong>
+            </div>
+          </div>
+
+
+          <div className="slider-section">
+            <div className="slider-title">
+              <span>Fetal Heart Rate</span>
+              <strong>
+                {health.babyHeartRate} bpm
+              </strong>
+            </div>
+          </div>
+
+
+          <div className="slider-section">
+            <div className="slider-title">
+              <span>Baby Movement</span>
+              <strong>
+                {health.babyMovement}
+              </strong>
+            </div>
+          </div>
+
 
           <div className="simulation-info">
-            <strong>Simulation Insight</strong>
+
+            <strong>AI Prediction</strong>
 
             <p>
-              The digital twin compares the current
-              trajectory with the simulated scenario
-              to estimate a potential risk change.
+              Maternal Risk:{" "}
+              <strong>{health.maternalRisk}</strong>
             </p>
+
+            <p>
+              Baby Status:{" "}
+              <strong>{health.babyStatus}</strong>
+            </p>
+
           </div>
+
         </div>
 
-        <RiskScore score={calculatedRisk} />
+
+        <RiskScore score={riskScore} />
+
       </section>
 
+
       <section className="trajectory-card">
+
         <p className="page-label">
           PREDICTED TRAJECTORY
         </p>
 
-        <h2>7-Day Health Projection</h2>
+        <h2>Current Health Projection</h2>
+
 
         <div className="trajectory">
+
           <div className="trajectory-point active">
+
             <span className="point"></span>
+
             <small>Today</small>
-            <strong>Current State</strong>
+
+            <strong>
+              Current State
+            </strong>
+
           </div>
+
 
           <div className="trajectory-line"></div>
 
+
           <div className="trajectory-point">
+
             <span className="point"></span>
+
             <small>+48 Hours</small>
-            <strong>Predicted Trend</strong>
+
+            <strong>
+              Predicted Trend
+            </strong>
+
           </div>
+
 
           <div className="trajectory-line"></div>
 
+
           <div className="trajectory-point">
+
             <span className="point"></span>
+
             <small>+7 Days</small>
-            <strong>Projected State</strong>
+
+            <strong>
+              Projected State
+            </strong>
+
           </div>
+
         </div>
+
 
         <div className="medical-note">
-          This prototype provides decision support and
-          simulated predictions. It should not be used
-          as autonomous medical advice.
+
+          This prototype provides AI-assisted decision
+          support and simulated predictions. It should
+          not be used as autonomous medical advice.
+
         </div>
+
       </section>
+
     </div>
   );
 }

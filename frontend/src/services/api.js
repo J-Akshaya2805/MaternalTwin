@@ -1,30 +1,114 @@
-const API_URL = "http://localhost:8000";
+const API_URL = "http://10.1.17.232:5000";
 
-export const getHealthData = async () => {
-  return {
-    heartRate: 82,
-    bloodPressure: "128/84",
-    spo2: 98,
-    temperature: 36.8,
-    glucose: 104,
-  };
+
+// ========================================
+// DASHBOARD DATA
+// ========================================
+
+export const getDashboardData = async () => {
+  const response = await fetch(
+    `${API_URL}/api/dashboard/MT001`
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message ||
+        result.error ||
+        "Failed to fetch dashboard data"
+    );
+  }
+
+  return result;
 };
 
-export const getRiskPrediction = async () => {
-  return {
-    riskScore: 28,
-    confidence: 94,
-    status: "Low Risk",
-  };
+
+// ========================================
+// SAVE HEALTH DATA
+// ========================================
+
+export const submitHealthData = async (healthData) => {
+  const response = await fetch(
+    `${API_URL}/api/health`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(healthData),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message ||
+        result.error ||
+        "Failed to save health data"
+    );
+  }
+
+  return result;
 };
 
-export const simulatePrediction = async (data) => {
-  console.log("Simulation data:", data);
 
-  return {
-    predictedRisk: 28,
-    trajectory: "Stable",
-  };
+// ========================================
+// AI PREDICTION
+// ========================================
+
+export const getPrediction = async (healthData) => {
+  const response = await fetch(
+    `${API_URL}/api/predict`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(healthData),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message ||
+        result.error ||
+        "Prediction failed"
+    );
+  }
+
+  return result;
 };
+
+
+// ========================================
+// GET HEALTH HISTORY
+// ========================================
+
+export const getHealthHistory = async () => {
+  const response = await fetch(
+    `${API_URL}/api/health/MT001`
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message ||
+        result.error ||
+        "Failed to fetch health history"
+    );
+  }
+
+  return result;
+};
+
 
 export default API_URL;
